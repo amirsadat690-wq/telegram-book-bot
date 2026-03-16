@@ -9,7 +9,7 @@ from telegram.ext import (
     filters,
 )
 
-TOKEN = "PUT_YOUR_NEW_TOKEN_HERE"
+TOKEN = "8687515349:AAGgxslDiMG8v6astAbIp0dbSMha34xPA4s"
 
 warns = {}
 anti_link_active = True
