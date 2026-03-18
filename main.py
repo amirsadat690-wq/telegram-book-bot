@@ -15,11 +15,11 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 # =====================
-# ⚡ SETTINGS
+# ⚡ تنظیمات اولیه
 # =====================
 TOKEN = "8257996186:AAE09LpmB9sbXUR_JpTTftPE08qI5LgTcUs"
 
-# DATABASE
+# دیتابیس
 conn = sqlite3.connect("supergroup_bot.db", check_same_thread=False)
 cursor = conn.cursor()
 
@@ -45,7 +45,7 @@ spam_counts = {}
 warns = {}
 
 # =====================
-# 🟢 HELPERS
+# 🟢 توابع کمکی
 # =====================
 def get_group_settings(chat_id):
     cursor.execute("SELECT * FROM groups WHERE chat_id=?", (chat_id,))
@@ -87,10 +87,10 @@ def list_custom_words(chat_id):
     return cursor.fetchall()
 
 # =====================
-# 🟢 COMMANDS
+# 🟢 دستورات
 # =====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Hello 👋 Bot is online ✅")
+    await update.message.reply_text("سلام 👋 ربات فعال است ✅")
 
 async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Pong! 🏓")
@@ -98,22 +98,22 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [
-            InlineKeyboardButton("✅ Anti-link", callback_data='toggle_anti_link'),
-            InlineKeyboardButton("✅ Auto-reply", callback_data='toggle_auto')
+            InlineKeyboardButton("✅ ضد لینک", callback_data='toggle_anti_link'),
+            InlineKeyboardButton("✅ پاسخ خودکار", callback_data='toggle_auto')
         ],
         [
-            InlineKeyboardButton("✅ Bad words", callback_data='toggle_bad'),
-            InlineKeyboardButton("✅ Anti-spam", callback_data='toggle_spam')
+            InlineKeyboardButton("✅ قفل فحش", callback_data='toggle_bad'),
+            InlineKeyboardButton("✅ ضد اسپم", callback_data='toggle_spam')
         ],
         [
-            InlineKeyboardButton("✅ Welcome", callback_data='toggle_welcome')
+            InlineKeyboardButton("✅ خوش‌آمدگویی", callback_data='toggle_welcome')
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Bot settings:", reply_markup=reply_markup)
+    await update.message.reply_text("مدیریت ربات:", reply_markup=reply_markup)
 
 # =====================
-# 🟢 BUTTON HANDLER (FIXED)
+# 🟢 دکمه‌ها (FIXED)
 # =====================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -126,45 +126,46 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     member = await query.message.chat.get_member(user.id)
 
     if member.status not in ["administrator", "creator"]:
-        await query.edit_message_text("❌ Only admins can use this")
+        await query.edit_message_text("❌ فقط ادمین می‌تواند استفاده کند")
         return
 
     if query.data == "toggle_anti_link":
         toggle_setting(chat_id, "anti_link", not settings["anti_link"])
-        await query.edit_message_text(f"Anti-link: {not settings['anti_link']}")
+        await query.edit_message_text(f"ضد لینک: {not settings['anti_link']}")
 
     elif query.data == "toggle_auto":
         toggle_setting(chat_id, "auto_reply", not settings["auto_reply"])
-        await query.edit_message_text(f"Auto-reply: {not settings['auto_reply']}")
+        await query.edit_message_text(f"پاسخ خودکار: {not settings['auto_reply']}")
 
     elif query.data == "toggle_bad":
         toggle_setting(chat_id, "bad_word", not settings["bad_word"])
-        await query.edit_message_text(f"Bad words: {not settings['bad_word']}")
+        await query.edit_message_text(f"قفل فحش: {not settings['bad_word']}")
 
     elif query.data == "toggle_spam":
         toggle_setting(chat_id, "spam", not settings["spam"])
-        await query.edit_message_text(f"Anti-spam: {not settings['spam']}")
+        await query.edit_message_text(f"ضد اسپم: {not settings['spam']}")
 
     elif query.data == "toggle_welcome":
         toggle_setting(chat_id, "welcome", not settings["welcome"])
-        await query.edit_message_text(f"Welcome: {not settings['welcome']}")
+        await query.edit_message_text(f"خوش‌آمدگویی: {not settings['welcome']}")
 
 # =====================
-# 🟢 FEATURES
+# 🟢 قابلیت‌ها
 # =====================
 async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     settings = get_group_settings(chat_id)
+
     if not settings["auto_reply"] or not update.message.text:
         return
 
     text = update.message.text.lower()
 
-    if "hello" in text or "سلام" in text:
-        await update.message.reply_text(f"Hello {update.effective_user.first_name} 👋")
+    if "سلام" in text or "hello" in text:
+        await update.message.reply_text(f"سلام {update.effective_user.first_name} 👋")
 
-    elif "how are you" in text:
-        await update.message.reply_text("I'm fine 😎")
+    elif "خوبی" in text or "how are you" in text:
+        await update.message.reply_text("مرسی! تو چطوری؟ 😎")
 
     else:
         resp = get_custom_response(chat_id, text)
@@ -174,12 +175,13 @@ async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     settings = get_group_settings(chat_id)
+
     if not settings["welcome"]:
         return
 
     if update.message.new_chat_members:
         for member in update.message.new_chat_members:
-            await update.message.reply_text(f"👋 Welcome {member.full_name}!")
+            await update.message.reply_text(f"👋 خوش آمدی {member.full_name}!")
 
 async def anti_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -205,9 +207,9 @@ async def anti_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await chat.ban_member(user_id)
                 warns[user_id] = 0
             except:
-                await update.message.reply_text("❌ Bot needs admin rights")
+                await update.message.reply_text("❌ ربات باید ادمین باشد")
         else:
-            await update.message.reply_text("❌ Links are not allowed!")
+            await update.message.reply_text("❌ ارسال لینک ممنوع است!")
 
 async def bad_word_filter(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -222,7 +224,7 @@ async def bad_word_filter(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if word in text:
             try:
                 await update.message.delete()
-                await update.message.reply_text("🚫 Bad language is not allowed!")
+                await update.message.reply_text("🚫 استفاده از الفاظ بد ممنوع است!")
             except:
                 pass
             break
@@ -246,7 +248,7 @@ async def anti_spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.job_queue.run_once(lambda ctx: spam_counts.pop(user_id, None), 10)
 
 # =====================
-# 🟢 RUN BOT
+# 🟢 اجرا
 # =====================
 app = ApplicationBuilder().token(TOKEN).build()
 
