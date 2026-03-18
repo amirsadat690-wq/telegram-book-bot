@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 API_TOKEN = "8257996186:AAE09LpmB9sbXUR_JpTTftPE08qI5LgTcUs"
-OWNER_ID = @OMAR_KHAN_ZADA
+OWNER_ID = 8500689915
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
