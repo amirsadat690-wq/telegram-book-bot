@@ -4,7 +4,7 @@ import asyncio
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = "8257996186:AAE09LpmB9sbXUR_JpTTftPE08qI5LgTcUs"
+API_TOKEN = "8687515349:AAGgxslDiMG8v6astAbIp0dbSMha34xPA4s"
 OWNER_ID = 8500689915
 
 bot = Bot(token=API_TOKEN)
