@@ -1,4 +1,4 @@
 python-telegram-bot
 requests
 langdetect
-aiogram
+aiogram==2.25.1
