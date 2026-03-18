@@ -72,30 +72,17 @@ def get_custom_response(chat_id, word):
     row = cursor.fetchone()
     return row[0] if row else None
 
-def add_custom_word(chat_id, word, response):
-    cursor.execute("INSERT OR REPLACE INTO custom_words(chat_id, word, response) VALUES(?,?,?)",
-                   (chat_id, word.lower(), response))
-    conn.commit()
-
-def remove_custom_word(chat_id, word):
-    cursor.execute("DELETE FROM custom_words WHERE chat_id=? AND word=?",
-                   (chat_id, word.lower()))
-    conn.commit()
-
-def list_custom_words(chat_id):
-    cursor.execute("SELECT word, response FROM custom_words WHERE chat_id=?", (chat_id,))
-    return cursor.fetchall()
-
 # =====================
 # 🟢 دستورات
 # =====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("سلام 👋 ربات فعال است ✅")
+    await update.message.reply_text("سلام 👋 ربات فعال است")
 
 async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Pong! 🏓")
+    await update.message.reply_text("Pong 🏓")
 
-async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# ✅ پنل جدید
+async def panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [
             InlineKeyboardButton("✅ ضد لینک", callback_data='toggle_anti_link'),
@@ -110,10 +97,10 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("مدیریت ربات:", reply_markup=reply_markup)
+    await update.message.reply_text("🎛 پنل مدیریت:", reply_markup=reply_markup)
 
 # =====================
-# 🟢 دکمه‌ها (FIXED)
+# 🟢 دکمه‌ها
 # =====================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -126,7 +113,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     member = await query.message.chat.get_member(user.id)
 
     if member.status not in ["administrator", "creator"]:
-        await query.edit_message_text("❌ فقط ادمین می‌تواند استفاده کند")
+        await query.edit_message_text("❌ فقط ادمین")
         return
 
     if query.data == "toggle_anti_link":
@@ -150,117 +137,13 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(f"خوش‌آمدگویی: {not settings['welcome']}")
 
 # =====================
-# 🟢 قابلیت‌ها
-# =====================
-async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    settings = get_group_settings(chat_id)
-
-    if not settings["auto_reply"] or not update.message.text:
-        return
-
-    text = update.message.text.lower()
-
-    if "سلام" in text or "hello" in text:
-        await update.message.reply_text(f"سلام {update.effective_user.first_name} 👋")
-
-    elif "خوبی" in text or "how are you" in text:
-        await update.message.reply_text("مرسی! تو چطوری؟ 😎")
-
-    else:
-        resp = get_custom_response(chat_id, text)
-        if resp:
-            await update.message.reply_text(resp)
-
-async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    settings = get_group_settings(chat_id)
-
-    if not settings["welcome"]:
-        return
-
-    if update.message.new_chat_members:
-        for member in update.message.new_chat_members:
-            await update.message.reply_text(f"👋 خوش آمدی {member.full_name}!")
-
-async def anti_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    settings = get_group_settings(chat_id)
-
-    if not settings["anti_link"] or not update.message.text:
-        return
-
-    text = update.message.text
-    user_id = update.effective_user.id
-    chat = update.effective_chat
-
-    if re.search(r"http[s]?://|t\.me|www\.", text):
-        try:
-            await update.message.delete()
-        except:
-            pass
-
-        warns[user_id] = warns.get(user_id, 0) + 1
-
-        if warns[user_id] >= 3:
-            try:
-                await chat.ban_member(user_id)
-                warns[user_id] = 0
-            except:
-                await update.message.reply_text("❌ ربات باید ادمین باشد")
-        else:
-            await update.message.reply_text("❌ ارسال لینک ممنوع است!")
-
-async def bad_word_filter(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    settings = get_group_settings(chat_id)
-
-    if not settings["bad_word"] or not update.message.text:
-        return
-
-    text = update.message.text.lower()
-
-    for word in bad_words:
-        if word in text:
-            try:
-                await update.message.delete()
-                await update.message.reply_text("🚫 استفاده از الفاظ بد ممنوع است!")
-            except:
-                pass
-            break
-
-async def anti_spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    settings = get_group_settings(chat_id)
-
-    if not settings["spam"]:
-        return
-
-    user_id = update.effective_user.id
-    spam_counts[user_id] = spam_counts.get(user_id, 0) + 1
-
-    if spam_counts[user_id] > 5:
-        try:
-            await update.message.delete()
-        except:
-            pass
-
-    context.job_queue.run_once(lambda ctx: spam_counts.pop(user_id, None), 10)
-
-# =====================
 # 🟢 اجرا
 # =====================
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ping", ping))
-app.add_handler(CommandHandler("menu", menu))
-
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, auto_reply))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, anti_link))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, bad_word_filter))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, anti_spam))
-app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
+app.add_handler(CommandHandler("panel", panel))  # ✅ جدید
 
 app.add_handler(CallbackQueryHandler(button))
 
